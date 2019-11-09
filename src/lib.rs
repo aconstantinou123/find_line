@@ -2,6 +2,7 @@ use std::io;
 use std::{ fs, env };
 use std::path::Path;
 use std::str;
+use termion;
 
 pub struct Config {
     pub query: String,
@@ -71,8 +72,11 @@ fn search(query: &str, contents: &str, path: &Path) -> Vec<String> {
         })
         .filter(|line| line.contains(query))
         .collect();
-    if !filtered.is_empty() {
+    if filtered.is_empty() { 
         println!("file: {:?}", path);
+        println!("{}{}{}", termion::cursor::Up(1), termion::clear::CurrentLine, termion::cursor::Up(1));
+    } else {
+         println!("\nfile: {:?}\n", path);
     }
     for line in filtered.iter() {
         println!("{}", line);
