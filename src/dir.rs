@@ -1,7 +1,36 @@
 use std::io;
-use std::fs;
+use std::{ fs, env };
 use std::path::Path;
 use std::str;
+
+pub struct Config {
+    pub query: String,
+    pub path: String,
+    pub case_sensitive: bool,
+}
+
+impl Config {
+    pub fn new(mut args: std::env::Args) -> Result<Config, &'static str> {
+        args.next();
+
+        let query = match args.next() {
+            Some(arg) => arg,
+            None => return Err("No query entered"),
+        };
+
+        let path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("No filename entered"),
+        };
+
+        let case_sensitive = match args.next() {
+            Some(arg) => if arg == "i" { false } else { return Err("invalid arguments") },
+            None => env::var("CASE_INSENSITIVE").is_err(),
+        };
+
+        Ok(Config { query, path, case_sensitive })
+    }
+}
 
 pub fn visit_dirs(dir: &Path, query: &str) -> io::Result<()> {
     if dir.is_dir() {
