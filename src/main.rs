@@ -1,7 +1,5 @@
-mod dir;
-
 use std::path::Path;
-use dir::Config;
+use find_words::Config;
 use std::{env, process};
 
 fn main() {
@@ -11,7 +9,7 @@ fn main() {
     });
     
     let path = Path::new(&config.path);
-    if let Err(e) = dir::visit_dirs(&path, &config.query) {
+    if let Err(e) = find_words::visit_dirs(&path, &config.query) {
         eprintln!("Application error: {}", e);
         process::exit(1);
     }
