@@ -1,7 +1,6 @@
 use std::io;
-use std::fs::{self, DirEntry, File};
+use std::fs;
 use std::path::Path;
-use std::io::Read;
 use std::str;
 
 pub fn visit_dirs(dir: &Path, query: &str) -> io::Result<()> {
@@ -16,14 +15,16 @@ pub fn visit_dirs(dir: &Path, query: &str) -> io::Result<()> {
             } else if path.is_file() {
                 let contents = match fs::read_to_string(&path) {
                     Ok(f) => f,
-                    Err(e) => e.to_string(),
+                    Err(e) => {
+                        e.to_string()
+                    },
                 };
-
-                search(&query, &contents);
+                if contents != "stream did not contain valid UTF-8" {
+                    search(&query, &contents, &path);
+                }
             }
         }
         for dir_path in dirs.iter(){
-            println!("dir: {:?}", dir_path);
             visit_dirs(&dir_path, &query)?;
         }
 
@@ -31,16 +32,21 @@ pub fn visit_dirs(dir: &Path, query: &str) -> io::Result<()> {
     Ok(())
 }
 
-fn read_file(path: &Path) -> Result<String, ()> {
-    let contents = fs::read_to_string(path)
-        .expect("fail");
-    Ok(contents)
-}
 
-fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
-    let filtered = contents.lines()
+fn search(query: &str, contents: &str, path: &Path) -> Vec<String> {
+    let mut counter = 1;
+    let filtered: Vec<String> = contents.lines()
+        .map(|line| {
+            counter += 1;
+            format!("{}: {}", counter, line.trim())
+        })
         .filter(|line| line.contains(query))
         .collect();
-    println!("filtered: {:?}", filtered);
+    if !filtered.is_empty() {
+        println!("file: {:?}", path);
+    }
+    for line in filtered.iter() {
+        println!("{}", line);
+    }
     filtered
 }
